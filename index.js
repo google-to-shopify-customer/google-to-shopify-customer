@@ -1,60 +1,50 @@
+// index.js
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const app = express();
+require('dotenv').config();
 
-// Middleware
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 
-// ENV vars from Render
-const SHOP_DOMAIN = process.env.SHOP_DOMAIN;
-const ADMIN_ACCESS_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-
-// Root test route
+// Root route
 app.get('/', (req, res) => {
-  res.send("✅ Google → Shopify customer backend is live!");
+  res.send('✅ Google → Shopify customer backend is live!');
 });
 
-// Customer creation route
+// Create customer in Shopify
 app.post('/create-customer', async (req, res) => {
-  const { email, firstName } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: "Email is required" });
-  }
-
   try {
+    const { email, firstName, lastName } = req.body;
+
     const response = await axios.post(
-      `https://${SHOP_DOMAIN}/admin/api/2024-07/customers.json`,
+      `https://${process.env.SHOP_DOMAIN}/admin/api/2023-07/customers.json`,
       {
         customer: {
           email,
-          first_name: firstName || '',
-          verified_email: true,
-          tags: 'google-login',
-          send_email_welcome: false
+          first_name: firstName,
+          last_name: lastName,
+          verified_email: true
         }
       },
       {
         headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Access-Token': ADMIN_ACCESS_TOKEN
+          'X-Shopify-Access-Token': process.env.SHOPIFY_ADMIN_ACCESS_TOKEN,
+          'Content-Type': 'application/json'
         }
       }
     );
 
-    res.json({ status: 'success', customer: response.data.customer });
-  } catch (err) {
-    console.error("❌ Shopify Error:", err.response?.data || err.message);
-    res.status(500).json({
-      status: 'error',
-      message: err.response?.data?.errors || err.message
-    });
+    res.status(200).json({ success: true, customer: response.data.customer });
+  } catch (error) {
+    console.error('Customer creation failed:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Customer creation failed' });
   }
 });
 
-// Start the server
-app.listen(3000, () => {
-  console.log("🚀 Server running on port 3000");
-});
+// Start server
+app.listen(PORT, () => {
+  console.log(`
