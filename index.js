@@ -10,6 +10,10 @@ const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY;
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;
 const SHOP_DOMAIN = process.env.SHOP_DOMAIN;
 
+app.get('/', (req, res) => {
+  res.send("✅ Google → Shopify customer backend is live!");
+});
+
 app.post('/create-customer', async (req, res) => {
   const { email, firstName } = req.body;
   if (!email) return res.status(400).json({ error: "Missing email" });
